@@ -34,6 +34,11 @@ const configureIdentityProvider = () => {
         clientId: process.env.AZURE_AD_CLIENT_ID!,
         clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
         tenantId: process.env.AZURE_AD_TENANT_ID!,
+        authorization: {
+          params: {
+            scope: 'email openid profile User.Read'
+          }
+        },
         async profile(profile) {
 
           const newProfile = {
@@ -63,6 +68,29 @@ export const options: NextAuthOptions = {
     async session({session, token, user }) {
       session.user.isAdmin = token.isAdmin as string
       return session
+    },
+    async signIn({ user, account, profile, email, credentials }) {
+      console.log("[signIn]")
+      console.log(user)
+      console.log(account)
+      console.log(profile)
+      console.log(email)
+      console.log(credentials)
+      var result = await fetch(
+        'https://graph.microsoft.com/v1.0/me/getMemberObjects',
+        {
+          method: 'POST',
+          body: '{"securityEnabledOnly":true}',
+          headers: {
+            Authorization: `bearer ${account?.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      console.log(result)
+      var body = await result.json()
+      console.log(body)
+      return (body.value as string[]).includes("c0232036-ff8e-4e0c-9832-beb4784f293a")
     }
   },
   session: {
