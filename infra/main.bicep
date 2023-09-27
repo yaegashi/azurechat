@@ -35,6 +35,16 @@ param searchServiceIndexName string = 'azure-chat'
 param searchServiceSkuName string = 'standard'
 param searchServiceAPIVersion string = '2023-07-01-Preview'
 
+param authGithubId string = ''
+@secure()
+param authGithubSecret string = ''
+param azureAdTenantId string = ''
+param azureAdClientId string = ''
+@secure()
+param azureAdClientSecret string = ''
+param azureAdAllowedPrincipals string = ''
+param adminEmailAddress string = ''
+
 param resourceGroupName string = ''
 
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
@@ -68,10 +78,20 @@ module resources 'resources.bicep' = {
     searchServiceIndexName: searchServiceIndexName
     searchServiceSkuName: searchServiceSkuName
     searchServiceAPIVersion: searchServiceAPIVersion
+    authGithubId: authGithubId
+    authGithubSecret: authGithubSecret
+    azureAdTenantId: azureAdTenantId
+    azureAdClientId: azureAdClientId
+    azureAdClientSecret: azureAdClientSecret
+    azureAdAllowedPrincipals: azureAdAllowedPrincipals
+    adminEmailAddress: adminEmailAddress
     location: location
   }
 }
 
 output APP_URL string = resources.outputs.url
+output APP_REDIRECT_URI_GITHUB string = '${resources.outputs.url}/api/auth/callback/github'
+output APP_REDIRECT_URI_AZURE_AD string = '${resources.outputs.url}/api/auth/callback/azure-ad'
+output AZURE_WEBAPP_RESOURCE_ID string = resources.outputs.webAppResourceId
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId

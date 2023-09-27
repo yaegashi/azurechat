@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "18067428240031110120"
+      "templateHash": "7991646275561812200"
     }
   },
   "parameters": {
@@ -92,6 +92,34 @@
       "type": "string",
       "defaultValue": "2023-07-01-Preview"
     },
+    "authGithubId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "authGithubSecret": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "azureAdTenantId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "azureAdClientId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "azureAdClientSecret": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "azureAdAllowedPrincipals": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "adminEmailAddress": {
+      "type": "string",
+      "defaultValue": ""
+    },
     "resourceGroupName": {
       "type": "string",
       "defaultValue": ""
@@ -173,6 +201,27 @@
           "searchServiceAPIVersion": {
             "value": "[parameters('searchServiceAPIVersion')]"
           },
+          "authGithubId": {
+            "value": "[parameters('authGithubId')]"
+          },
+          "authGithubSecret": {
+            "value": "[parameters('authGithubSecret')]"
+          },
+          "azureAdTenantId": {
+            "value": "[parameters('azureAdTenantId')]"
+          },
+          "azureAdClientId": {
+            "value": "[parameters('azureAdClientId')]"
+          },
+          "azureAdClientSecret": {
+            "value": "[parameters('azureAdClientSecret')]"
+          },
+          "azureAdAllowedPrincipals": {
+            "value": "[parameters('azureAdAllowedPrincipals')]"
+          },
+          "adminEmailAddress": {
+            "value": "[parameters('adminEmailAddress')]"
+          },
           "location": {
             "value": "[parameters('location')]"
           }
@@ -184,7 +233,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.21.1.54444",
-              "templateHash": "3970654296971990539"
+              "templateHash": "6130110072826383843"
             }
           },
           "parameters": {
@@ -233,6 +282,10 @@
               "type": "string",
               "defaultValue": "text-embedding-ada-002"
             },
+            "speechServiceSkuName": {
+              "type": "string",
+              "defaultValue": "S0"
+            },
             "formRecognizerSkuName": {
               "type": "string",
               "defaultValue": "S0"
@@ -248,6 +301,34 @@
             "searchServiceAPIVersion": {
               "type": "string",
               "defaultValue": "2023-07-01-Preview"
+            },
+            "authGithubId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "authGithubSecret": {
+              "type": "securestring",
+              "defaultValue": ""
+            },
+            "azureAdTenantId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "azureAdClientId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "azureAdClientSecret": {
+              "type": "securestring",
+              "defaultValue": ""
+            },
+            "azureAdAllowedPrincipals": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "adminEmailAddress": {
+              "type": "string",
+              "defaultValue": ""
             },
             "location": {
               "type": "string",
@@ -265,12 +346,15 @@
           "variables": {
             "openai_name": "[toLower(format('{0}ai{1}', parameters('name'), parameters('resourceToken')))]",
             "form_recognizer_name": "[toLower(format('{0}-form-{1}', parameters('name'), parameters('resourceToken')))]",
+            "speech_service_name": "[toLower(format('{0}-speech-{1}', parameters('name'), parameters('resourceToken')))]",
             "cosmos_name": "[toLower(format('{0}-cosmos-{1}', parameters('name'), parameters('resourceToken')))]",
             "search_name": "[toLower(format('{0}search{1}', parameters('name'), parameters('resourceToken')))]",
             "webapp_name": "[toLower(format('{0}-webapp-{1}', parameters('name'), parameters('resourceToken')))]",
             "appservice_name": "[toLower(format('{0}-app-{1}', parameters('name'), parameters('resourceToken')))]",
             "kv_prefix": "[take(parameters('name'), 7)]",
             "keyVaultName": "[toLower(format('{0}-kv-{1}', variables('kv_prefix'), parameters('resourceToken')))]",
+            "la_workspace_name": "[toLower(format('{0}-la-{1}', parameters('name'), parameters('resourceToken')))]",
+            "diagnostic_setting_name": "AppServiceConsoleLogs",
             "keyVaultSecretsUserRole": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
             "databaseName": "chat",
             "containerName": "history",
@@ -341,6 +425,19 @@
             {
               "type": "Microsoft.KeyVault/vaults/secrets",
               "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-SPEECH-KEY')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('speech_service_name')), '2023-05-01').key1]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('speech_service_name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
               "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-SEARCH-API-KEY')]",
               "properties": {
                 "contentType": "text/plain",
@@ -358,6 +455,90 @@
               "properties": {
                 "contentType": "text/plain",
                 "value": "[parameters('nextAuthHash')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AUTH-GITHUB-ID')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('authGithubId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AUTH-GITHUB-SECRET')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('authGithubSecret')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-AD-TENANT-ID')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('azureAdTenantId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-AD-CLIENT-ID')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('azureAdClientId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-AD-CLIENT-SECRET')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('azureAdClientSecret')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'AZURE-AD-ALLOWED-PRINCIPALS')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('azureAdAllowedPrincipals')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[format('{0}/{1}', variables('keyVaultName'), 'ADMIN-EMAIL-ADDRESS')]",
+              "properties": {
+                "contentType": "text/plain",
+                "value": "[parameters('adminEmailAddress')]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
@@ -427,7 +608,7 @@
                     },
                     {
                       "name": "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT",
-                      "value": "[format('https://{0}.api.cognitive.microsoft.com/', parameters('location'))]"
+                      "value": "[format('https://{0}.cognitiveservices.azure.com/', variables('form_recognizer_name'))]"
                     },
                     {
                       "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
@@ -460,6 +641,42 @@
                     {
                       "name": "NEXTAUTH_URL",
                       "value": "[format('https://{0}.azurewebsites.net', variables('webapp_name'))]"
+                    },
+                    {
+                      "name": "AZURE_SPEECH_REGION",
+                      "value": "[resourceGroup().location]"
+                    },
+                    {
+                      "name": "AZURE_SPEECH_KEY",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AZURE-SPEECH-KEY')]"
+                    },
+                    {
+                      "name": "AUTH_GITHUB_ID",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AUTH-GITHUB-ID')]"
+                    },
+                    {
+                      "name": "AUTH_GITHUB_SECRET",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AUTH-GITHUB-SECRET')]"
+                    },
+                    {
+                      "name": "AZURE_AD_TENANT_ID",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AZURE-AD-TENANT-ID')]"
+                    },
+                    {
+                      "name": "AZURE_AD_CLIENT_ID",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AZURE-AD-CLIENT-ID')]"
+                    },
+                    {
+                      "name": "AZURE_AD_CLIENT_SECRET",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AZURE-AD-CLIENT-SECRET')]"
+                    },
+                    {
+                      "name": "AZURE_AD_ALLOWED_PRINCIPALS",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'AZURE-AD-ALLOWED-PRINCIPALS')]"
+                    },
+                    {
+                      "name": "ADMIN_EMAIL_ADDRESS",
+                      "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName={1})', variables('keyVaultName'), 'ADMIN-EMAIL-ADDRESS')]"
                     }
                   ]
                 }
@@ -468,14 +685,48 @@
                 "type": "SystemAssigned"
               },
               "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'ADMIN-EMAIL-ADDRESS')]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('appservice_name'))]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AUTH-GITHUB-ID')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AUTH-GITHUB-SECRET')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-AD-ALLOWED-PRINCIPALS')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-AD-CLIENT-ID')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-AD-CLIENT-SECRET')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-AD-TENANT-ID')]",
                 "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-COSMOSDB-KEY')]",
                 "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-DOCUMENT-INTELLIGENCE-KEY')]",
                 "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-OPENAI-API-KEY')]",
                 "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-SEARCH-API-KEY')]",
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'AZURE-SPEECH-KEY')]",
                 "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmos_name'))]",
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
                 "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'NEXTAUTH-SECRET')]"
+              ]
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2021-12-01-preview",
+              "name": "[variables('la_workspace_name')]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[format('Microsoft.Web/sites/{0}', variables('webapp_name'))]",
+              "name": "[variables('diagnostic_setting_name')]",
+              "properties": {
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('la_workspace_name'))]",
+                "logs": [
+                  {
+                    "category": "AppServiceConsoleLogs",
+                    "enabled": true
+                  }
+                ],
+                "metrics": []
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('la_workspace_name'))]",
+                "[resourceId('Microsoft.Web/sites', variables('webapp_name'))]"
               ]
             },
             {
@@ -624,12 +875,31 @@
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', variables('openai_name'))]"
               ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2023-05-01",
+              "name": "[variables('speech_service_name')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "SpeechServices",
+              "properties": {
+                "customSubDomainName": "[variables('speech_service_name')]",
+                "publicNetworkAccess": "Enabled"
+              },
+              "sku": {
+                "name": "[parameters('speechServiceSkuName')]"
+              }
             }
           ],
           "outputs": {
             "url": {
               "type": "string",
               "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', variables('webapp_name')), '2020-06-01').defaultHostName)]"
+            },
+            "webAppResourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/sites', variables('webapp_name'))]"
             }
           }
         }
@@ -643,6 +913,18 @@
     "APP_URL": {
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('rg-{0}', parameters('name')))), 'Microsoft.Resources/deployments', 'all-resources'), '2022-09-01').outputs.url.value]"
+    },
+    "APP_REDIRECT_URI_GITHUB": {
+      "type": "string",
+      "value": "[format('{0}/api/auth/callback/github', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('rg-{0}', parameters('name')))), 'Microsoft.Resources/deployments', 'all-resources'), '2022-09-01').outputs.url.value)]"
+    },
+    "APP_REDIRECT_URI_AZURE_AD": {
+      "type": "string",
+      "value": "[format('{0}/api/auth/callback/azure-ad', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('rg-{0}', parameters('name')))), 'Microsoft.Resources/deployments', 'all-resources'), '2022-09-01').outputs.url.value)]"
+    },
+    "AZURE_WEBAPP_RESOURCE_ID": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('rg-{0}', parameters('name')))), 'Microsoft.Resources/deployments', 'all-resources'), '2022-09-01').outputs.webAppResourceId.value]"
     },
     "AZURE_LOCATION": {
       "type": "string",

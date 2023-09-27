@@ -19,6 +19,16 @@ param searchServiceSkuName string = 'standard'
 param searchServiceIndexName string = 'azure-chat'
 param searchServiceAPIVersion string = '2023-07-01-Preview'
 
+param authGithubId string = ''
+@secure()
+param authGithubSecret string = ''
+param azureAdTenantId string = ''
+param azureAdClientId string = ''
+@secure()
+param azureAdClientSecret string = ''
+param azureAdAllowedPrincipals string = ''
+param adminEmailAddress string = ''
+
 param location string = resourceGroup().location
 
 @secure()
@@ -171,6 +181,34 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
           name: 'AZURE_SPEECH_KEY'
           value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AZURE_SPEECH_KEY.name})'
         }
+        {
+          name: 'AUTH_GITHUB_ID'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AUTH_GITHUB_ID.name})'
+        }
+        {
+          name: 'AUTH_GITHUB_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AUTH_GITHUB_SECRET.name})'
+        }
+        {
+          name: 'AZURE_AD_TENANT_ID'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AZURE_AD_TENANT_ID.name})'
+        }
+        {
+          name: 'AZURE_AD_CLIENT_ID'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AZURE_AD_CLIENT_ID.name})'
+        }
+        {
+          name: 'AZURE_AD_CLIENT_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AZURE_AD_CLIENT_SECRET.name})'
+        }
+        {
+          name: 'AZURE_AD_ALLOWED_PRINCIPALS'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::AZURE_AD_ALLOWED_PRINCIPALS.name})'
+        }
+        {
+          name: 'ADMIN_EMAIL_ADDRESS'
+          value: '@Microsoft.KeyVault(VaultName=${kv.name};SecretName=${kv::ADMIN_EMAIL_ADDRESS.name})'
+        }
       ]
     }
   }
@@ -268,6 +306,62 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
     properties: {
       contentType: 'text/plain'
       value: nextAuthHash
+    }
+  }
+
+  resource AUTH_GITHUB_ID 'secrets' = {
+    name: 'AUTH-GITHUB-ID'
+    properties: {
+      contentType: 'text/plain'
+      value: authGithubId
+    }
+  }
+
+  resource AUTH_GITHUB_SECRET 'secrets' = {
+    name: 'AUTH-GITHUB-SECRET'
+    properties: {
+      contentType: 'text/plain'
+      value: authGithubSecret
+    }
+  }
+
+  resource AZURE_AD_TENANT_ID 'secrets' = {
+    name: 'AZURE-AD-TENANT-ID'
+    properties: {
+      contentType: 'text/plain'
+      value: azureAdTenantId
+    }
+  }
+
+  resource AZURE_AD_CLIENT_ID 'secrets' = {
+    name: 'AZURE-AD-CLIENT-ID'
+    properties: {
+      contentType: 'text/plain'
+      value: azureAdClientId
+    }
+  }
+
+  resource AZURE_AD_CLIENT_SECRET 'secrets' = {
+    name: 'AZURE-AD-CLIENT-SECRET'
+    properties: {
+      contentType: 'text/plain'
+      value: azureAdClientSecret
+    }
+  }
+
+  resource AZURE_AD_ALLOWED_PRINCIPALS 'secrets' = {
+    name: 'AZURE-AD-ALLOWED-PRINCIPALS'
+    properties: {
+      contentType: 'text/plain'
+      value: azureAdAllowedPrincipals
+    }
+  }
+
+  resource ADMIN_EMAIL_ADDRESS 'secrets' = {
+    name: 'ADMIN-EMAIL-ADDRESS'
+    properties: {
+      contentType: 'text/plain'
+      value: adminEmailAddress
     }
   }
 }
@@ -385,3 +479,4 @@ resource speechService 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 }
 
 output url string = 'https://${webApp.properties.defaultHostName}'
+output webAppResourceId string = webApp.id
